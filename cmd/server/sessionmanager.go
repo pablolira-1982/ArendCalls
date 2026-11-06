@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -155,11 +156,13 @@ func (m *SessionManager) Restore(ctx context.Context) error {
 		return err
 	}
 	for _, row := range rows {
+		var s *Session
 		if row.JID == "" {
 			device := m.container.NewDevice()
 			client := whatsmeow.NewClient(device, m.waLogger)
-			s := newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
+			s = newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
 			s.auth = AuthSnapshot{State: "logged_out", Paired: false}
+			restoreSessionFields(s, row)
 			m.register(s)
 			continue
 		}
@@ -168,8 +171,9 @@ func (m *SessionManager) Restore(ctx context.Context) error {
 			m.log.Warn("session has unparseable jid; preserving session in logged_out state", "session", row.ID, "jid", row.JID)
 			device := m.container.NewDevice()
 			client := whatsmeow.NewClient(device, m.waLogger)
-			s := newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
+			s = newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
 			s.auth = AuthSnapshot{State: "logged_out", Paired: false}
+			restoreSessionFields(s, row)
 			m.register(s)
 			continue
 		}
@@ -178,13 +182,15 @@ func (m *SessionManager) Restore(ctx context.Context) error {
 			m.log.Warn("session device not found; preserving session in logged_out state", "session", row.ID, "jid", row.JID)
 			device = m.container.NewDevice()
 			client := whatsmeow.NewClient(device, m.waLogger)
-			s := newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
+			s = newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
 			s.auth = AuthSnapshot{State: "logged_out", Paired: false}
+			restoreSessionFields(s, row)
 			m.register(s)
 			continue
 		}
 		client := whatsmeow.NewClient(device, m.waLogger)
-		s := newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
+		s = newSession(m, row.ID, row.Name, row.WebhookURL, row.PanelInbound, client)
+		restoreSessionFields(s, row)
 		m.register(s)
 		m.log.Info("session restored from database", "session", row.ID, "name", row.Name, "jid", row.JID)
 		if m.blocked.Load() {
@@ -559,4 +565,33 @@ func (m *SessionManager) pulseAll() {
 			go s.presencePulse(m.appCtx)
 		}
 	}
+}
+
+func restoreSessionFields(s *Session, row sessionRow) {
+	s.proxy = row.Proxy
+	s.sipUser = row.SIPUser
+	s.sipPass = row.SIPPass
+	s.sipExt = SIPExtConfig{
+		Enabled:     row.SIPExtEnabled,
+		Host:        row.SIPExtHost,
+		Port:        row.SIPExtPort,
+		User:        row.SIPExtUser,
+		Pass:        row.SIPExtPass,
+		Dest:        row.SIPExtDest,
+		Proxy:       row.SIPExtProxy,
+		InboundMode: row.SIPExtOpts,
+	}
+	if row.Chatwoot != "" {
+		var cw ChatwootConfig
+		if err := json.Unmarshal([]byte(row.Chatwoot), &cw); err == nil {
+			s.chatwoot = cw
+		}
+	}
+	if row.Webhooks != "" {
+		var hooks []WebhookTarget
+		if err := json.Unmarshal([]byte(row.Webhooks), &hooks); err == nil {
+			s.webhooks = hooks
+		}
+	}
+	s.applyProxy()
 }

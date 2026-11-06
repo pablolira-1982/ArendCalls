@@ -44,7 +44,8 @@ COPY --from=builder-frontend /app/client/dist /app/client/dist
 # Expor a porta principal da API (8080)
 EXPOSE 8080
 
-# (Opcional, informativo) Expor as portas UDP do WebRTC
+# Expor a porta padrão SIP (5060/udp) e portas UDP do WebRTC
+EXPOSE 5060/udp
 EXPOSE 50000-50100/udp
 
 # O volume onde o banco SQLite vai persistir
@@ -60,4 +61,4 @@ ENV API_KEY=""
 ENV GOGC=200
 
 # Iniciar o servidor apontando os estáticos para a pasta correta e o banco para o diretório de dados
-ENTRYPOINT ["/app/arendcalls", "-addr", "0.0.0.0:8080", "-static", "/app/client/dist", "-db", "/app/data/wacalls.db"]
+ENTRYPOINT ["/app/arendcalls", "-addr", "0.0.0.0:8080", "-static", "/app/client/dist", "-db", "/app/data/arendcalls.db"]

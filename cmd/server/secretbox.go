@@ -35,7 +35,7 @@ const encPrefix = "enc:v1:"
 func newSecretBox(log *slog.Logger) *secretBox {
 	raw := strings.TrimSpace(os.Getenv("RECORDING_CONFIG_KEY"))
 	if raw == "" {
-		log.Warn("RECORDING_CONFIG_KEY not set — recording B2/webhook secrets will be stored in plaintext in wacalls.db")
+		log.Warn("RECORDING_CONFIG_KEY not set — recording B2/webhook secrets will be stored in plaintext in arendcalls.db")
 		return &secretBox{}
 	}
 	key := decodeKey(raw)

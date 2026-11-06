@@ -107,7 +107,7 @@ func TestAPIAuthentication(t *testing.T) {
 
 	t.Run("Authorized - Admin Token Cookie", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", ts.URL+"/api/sessions", nil)
-		req.AddCookie(&http.Cookie{Name: "wacalls_admin_token", Value: adminToken})
+		req.AddCookie(&http.Cookie{Name: "arendcalls_admin_token", Value: adminToken})
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Fatal(err)

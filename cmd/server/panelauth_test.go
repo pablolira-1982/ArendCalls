@@ -97,7 +97,7 @@ func TestPanelLoginFlow(t *testing.T) {
 		t.Fatalf("sem cookie: esperado 401, veio %d", code)
 	}
 	// Com login ligado, o cookie automático antigo não vale mais.
-	if code := getWithCookie(t, ts.URL+"/api/sessions", &http.Cookie{Name: "wacalls_admin_token", Value: "admin-token"}); code != http.StatusUnauthorized {
+	if code := getWithCookie(t, ts.URL+"/api/sessions", &http.Cookie{Name: "arendcalls_admin_token", Value: "admin-token"}); code != http.StatusUnauthorized {
 		t.Fatalf("cookie automático: esperado 401, veio %d", code)
 	}
 
@@ -207,7 +207,7 @@ func TestPanelStaticCookieOnlyWhenOpen(t *testing.T) {
 		}
 		res.Body.Close()
 		for _, c := range res.Cookies() {
-			if strings.HasPrefix(c.Name, "wacalls_admin_token") {
+			if strings.HasPrefix(c.Name, "arendcalls_admin_token") {
 				return true
 			}
 		}

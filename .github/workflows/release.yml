@@ -43,7 +43,7 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
-          out="wacalls-server-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          out="arendcalls-server-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
           go build -trimpath \
             -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" \
             -o "dist/${out}" ./cmd/server
@@ -77,13 +77,13 @@ jobs:
         run: npm run build
 
       - name: Package
-        run: tar -czf ../wacalls-client-${GITHUB_REF_NAME}.tar.gz -C dist .
+        run: tar -czf ../arendcalls-client-${GITHUB_REF_NAME}.tar.gz -C dist .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: client-dist
-          path: wacalls-client-*.tar.gz
+          path: arendcalls-client-*.tar.gz
 
   release:
     name: release

@@ -142,7 +142,7 @@ func TestAudioWebSocketAuth(t *testing.T) {
 
 	t.Run("cookie com Origin de outro site → recusado", func(t *testing.T) {
 		h := http.Header{
-			"Cookie": {"wacalls_admin_token=" + adminToken},
+			"Cookie": {"arendcalls_admin_token=" + adminToken},
 			"Origin": {"https://evil.example"},
 		}
 		if code := dial(t, wsURL, h); code != http.StatusForbidden {
@@ -152,7 +152,7 @@ func TestAudioWebSocketAuth(t *testing.T) {
 
 	t.Run("cookie com Origin do próprio host", func(t *testing.T) {
 		h := http.Header{
-			"Cookie": {"wacalls_admin_token=" + adminToken},
+			"Cookie": {"arendcalls_admin_token=" + adminToken},
 			"Origin": {ts.URL},
 		}
 		if code := dial(t, wsURL, h); code != http.StatusSwitchingProtocols {

@@ -36,7 +36,7 @@ func newMigNode(t *testing.T, dir, apiKey, recKey string, wrap func(http.Handler
 	t.Setenv("RECORDING_CONFIG_KEY", recKey)
 	ctx, cancel := context.WithCancel(context.Background())
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	srv, err := newServer(ctx, filepath.Join(dir, "wacalls.db"), "", apiKey, filepath.Join(dir, "recordings"), 0, 1, nil, log)
+	srv, err := newServer(ctx, filepath.Join(dir, "arendcalls.db"), "", apiKey, filepath.Join(dir, "recordings"), 0, 1, nil, log)
 	if err != nil {
 		t.Fatal(err)
 	}

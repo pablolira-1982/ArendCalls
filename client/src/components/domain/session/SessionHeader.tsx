@@ -4,6 +4,12 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { logoutSession, pairSession, startSession, stopSession, restartSession } from "@/services/sessions";
+import { ProxyDialog } from "./ProxyDialog";
+import { SIPDialog } from "./SIPDialog";
+import { WebhookDialog } from "./WebhookDialog";
+import { McpDialog } from "./McpDialog";
+import { ChatwootDialog } from "./ChatwootDialog";
+import { FormsDialog } from "./FormsDialog";
 import type { SessionInfo, SessionState } from "@/types/session";
 
 const statusLabel: Record<SessionState, string> = {
@@ -79,6 +85,13 @@ export const SessionHeader = ({ session }: { session: SessionInfo }) => {
           <RefreshCcw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} />
           Reiniciar
         </Button>
+
+        {session.paired && <ProxyDialog sid={session.id} />}
+        {session.paired && <SIPDialog session={session} />}
+        <WebhookDialog sid={session.id} />
+        <McpDialog sid={session.id} />
+        {session.paired && <ChatwootDialog sid={session.id} />}
+        {session.paired && <FormsDialog sid={session.id} />}
 
         {session.paired ? (
           <Button 

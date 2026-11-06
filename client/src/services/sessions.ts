@@ -55,3 +55,56 @@ export const startSession = (id: string) => postVoid(`/api/sessions/${id}/start`
 export const stopSession = (id: string) => postVoid(`/api/sessions/${id}/stop`);
 
 export const restartSession = (id: string) => postVoid(`/api/sessions/${id}/restart`);
+
+export const getProxy = (id: string) =>
+  apiGet<{ proxy: string; enabled: boolean }>(`/api/sessions/${id}/proxy`);
+
+export const setProxy = async (id: string, proxy: string): Promise<void> => {
+  const r = await fetch(`/api/sessions/${id}/proxy`, {
+    method: "PUT",
+    headers: { "X-Client-Id": getClientId(), "Content-Type": "application/json" },
+    body: JSON.stringify({ proxy }),
+  });
+  await checkStatus(r, `/api/sessions/${id}/proxy`);
+};
+
+export type SIPExtConfig = {
+  authUser?: string;
+  enabled: boolean;
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+  dest: string;
+  proxy?: string;
+  inboundMode?: "originate" | "agent" | "auto";
+  agentAutoAnswer?: boolean;
+  agentRingTimeoutSeconds?: number;
+  status?: string;
+  error?: string;
+  advertise?: string;
+};
+
+export const getSIPExt = (id: string) =>
+  apiGet<SIPExtConfig>(`/api/sessions/${id}/sip-ext`);
+
+export const setSIPExt = (id: string, cfg: Omit<SIPExtConfig, "status" | "error" | "advertise">) =>
+  apiPost<{ status: string }>(`/api/sessions/${id}/sip-ext`, cfg);
+
+export type NativeFormInfo = {
+  flowId: string;
+  flowName?: string;
+  formType?: string;
+  body?: string;
+  cta?: string;
+  screen?: string;
+  data?: Record<string, unknown>;
+  fields?: string[];
+  sentCount: number;
+  lastSentAt?: number;
+  responseCount: number;
+  lastResponseAt?: number;
+};
+
+export const listNativeForms = (id: string) =>
+  apiGet<{ forms: NativeFormInfo[]; count: number }>(`/api/sessions/${id}/native-forms`);

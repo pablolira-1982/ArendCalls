@@ -266,7 +266,7 @@ export const ApiDocs = () => {
               <strong>Autenticação Traefik Basic Auth</strong>: Usuário e senha definidos nas labels do docker-compose para proteger o endpoint público.
             </li>
             <li>
-              <strong>Painel de Controle Web</strong>: Autentica-se automaticamente via cookie de sessão seguro (<code>wacalls_admin_token</code>).
+              <strong>Painel de Controle Web</strong>: Autentica-se automaticamente via cookie de sessão seguro (<code>arendcalls_admin_token</code>).
             </li>
           </ul>
         </div>

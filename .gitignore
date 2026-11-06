@@ -2,7 +2,9 @@
 /plano.md
 /skills-usado.md
 /task.md
-/wacalls-server.exe
+/PROMPT.md
+/arendcalls
+/arendcalls-server.exe
 /wacalls.exe
 run-mlow.ps1
 *.exe
@@ -10,7 +12,7 @@ run-mlow.ps1
 *.out
 /dist/
 /bin/
-wacalls.db
+arendcalls.db
 *.db
 *.db-journal
 *.db-wal
@@ -41,18 +43,17 @@ Thumbs.db
 !native/
 !native/*.dll
 
-# Environment variables
-.env
+# Environment variables (keep blank .env and .env.example tracked)
 .env.*
+!.env
 !.env.example
 
-# Binaries generated — anchored to repo root; the loose "server" pattern was
-# shadowing the whole cmd/server/ package directory.
+# Binaries generated
 /arendcalls_bin
 /bridge
 /server
 /wacalls
-/wacalls-server
+/arendcalls-server
 
 # Keys and certificates
 *.pem

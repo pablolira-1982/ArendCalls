@@ -155,7 +155,7 @@ func (s *server) panelCookieOK(r *http.Request) bool {
 		c, err := r.Cookie(panelSessionCookie)
 		return err == nil && s.panel.valid(c.Value)
 	}
-	c, err := r.Cookie("wacalls_admin_token")
+	c, err := r.Cookie("arendcalls_admin_token")
 	return err == nil && s.adminToken != "" && c.Value == s.adminToken
 }
 

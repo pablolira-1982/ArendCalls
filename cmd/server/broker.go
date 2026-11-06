@@ -45,6 +45,10 @@ type SessionInfo struct {
 	QR           string `json:"qr,omitempty"`
 	WebhookURL   string `json:"webhookUrl,omitempty"`
 	PanelInbound bool   `json:"panelInbound"`
+	SIPUser      string `json:"sip_user,omitempty"`
+	SIPPass      string `json:"sip_pass,omitempty"`
+	SIPURL       string `json:"sip_url,omitempty"`
+	SIPExtStatus string `json:"sip_ext_status,omitempty"`
 }
 
 type subscriber struct {

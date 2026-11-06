@@ -32,6 +32,12 @@ export const apiPatch = async <T>(path: string, body: unknown): Promise<T> => {
   return r.json() as Promise<T>;
 };
 
+export const apiPut = async <T>(path: string, body: unknown): Promise<T> => {
+  const r = await fetch(path, { method: "PUT", headers: baseHeaders(), body: JSON.stringify(body) });
+  await checkStatus(r, path);
+  return r.json() as Promise<T>;
+};
+
 export const apiDelete = async (path: string): Promise<void> => {
   const r = await fetch(path, { method: "DELETE", headers: baseHeaders() });
   await checkStatus(r, path);

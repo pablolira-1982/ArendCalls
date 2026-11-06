@@ -43,9 +43,82 @@ type Session struct {
 	lastPulse atomic.Int64 // unix nano do último pulso de presença enviado
 	pulsing   atomic.Bool
 
+	proxy      string
+	chatwoot   ChatwootConfig
+	webhooks   []WebhookTarget
+	sipExt     SIPExtConfig
+	sipUser    string
+	sipPass    string
+
 	// connectedOnce: o login chegou a completar desde que a sessão foi
 	// registrada. A migração usa para saber se o clone já usou as chaves.
 	connectedOnce atomic.Bool
+}
+
+func (s *Session) getProxy() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.proxy
+}
+
+func (s *Session) setProxy(p string) {
+	s.mu.Lock()
+	s.proxy = p
+	s.mu.Unlock()
+}
+
+func (s *Session) applyProxy() {
+	addr := s.getProxy()
+	if addr != "" {
+		if err := s.client.SetProxyAddress(addr); err != nil {
+			s.log.Warn("proxy inválido", "err", err)
+		}
+	}
+}
+
+func (s *Session) reconnect() {
+	if s.client.Store.ID == nil {
+		return
+	}
+	s.client.Disconnect()
+	s.applyProxy()
+	_ = s.client.Connect()
+}
+
+func (s *Session) getChatwoot() ChatwootConfig {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.chatwoot
+}
+
+func (s *Session) setChatwoot(c ChatwootConfig) {
+	s.mu.Lock()
+	s.chatwoot = c
+	s.mu.Unlock()
+}
+
+func (s *Session) getWebhooks() []WebhookTarget {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]WebhookTarget(nil), s.webhooks...)
+}
+
+func (s *Session) setWebhooks(w []WebhookTarget) {
+	s.mu.Lock()
+	s.webhooks = w
+	s.mu.Unlock()
+}
+
+func (s *Session) getSIPExt() SIPExtConfig {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sipExt
+}
+
+func (s *Session) setSIPExt(cfg SIPExtConfig) {
+	s.mu.Lock()
+	s.sipExt = cfg
+	s.mu.Unlock()
 }
 
 func newSession(mgr *SessionManager, id, name, webhookURL string, panelInbound bool, client *whatsmeow.Client) *Session {
@@ -505,6 +578,7 @@ func (s *Session) handleEvent(rawEvt any) {
 }
 
 func (s *Session) connect(ctx context.Context) error {
+	s.applyProxy()
 	if s.client.Store.ID != nil {
 		return s.client.Connect()
 	}
@@ -553,12 +627,32 @@ func (s *Session) info() SessionInfo {
 	a := s.auth
 	webhookURL := s.webhookURL
 	panelInbound := s.panelInbound
+	sipUser := s.sipUser
+	sipPass := s.sipPass
+	sipExt := s.sipExt
 	s.mu.Unlock()
 	jid := ""
 	if id := s.client.Store.ID; id != nil {
 		jid = id.String()
 	}
-	return SessionInfo{ID: s.id, Name: s.name, JID: jid, State: a.State, Paired: a.Paired || jid != "", QR: a.QR, WebhookURL: webhookURL, PanelInbound: panelInbound}
+	extStatus := ""
+	if sipExt.Enabled {
+		extStatus = "configured"
+	}
+	return SessionInfo{
+		ID:           s.id,
+		Name:         s.name,
+		JID:          jid,
+		State:        a.State,
+		Paired:       a.Paired || jid != "",
+		QR:           a.QR,
+		WebhookURL:   webhookURL,
+		PanelInbound: panelInbound,
+		SIPUser:      sipUser,
+		SIPPass:      sipPass,
+		SIPURL:       "",
+		SIPExtStatus: extStatus,
+	}
 }
 
 func (s *Session) setBridge(callID string, b browserLeg) {

@@ -19,7 +19,7 @@ export type AudioDebugSample = {
   loopLagMs: number; // event-loop lag on the 2 s timer
 };
 
-const KEY = "wacalls.audioDebug";
+const KEY = "arendcalls.audioDebug";
 const MAX_SAMPLES = 40;
 
 type State = {

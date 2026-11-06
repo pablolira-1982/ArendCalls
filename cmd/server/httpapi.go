@@ -53,6 +53,38 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /api/sessions/{sid}/recordings", s.handleListRecordings)
 	mux.HandleFunc("GET /api/sessions/{sid}/calls/{id}/recording-info", s.handleRecordingInfo)
 
+	// Proxy
+	mux.HandleFunc("GET /api/sessions/{sid}/proxy", s.handleGetProxy)
+	mux.HandleFunc("PUT /api/sessions/{sid}/proxy", s.handleSetProxy)
+
+	// Multi-Webhooks
+	mux.HandleFunc("GET /api/sessions/{sid}/webhooks", s.handleListWebhooks)
+	mux.HandleFunc("POST /api/sessions/{sid}/webhooks", s.handleCreateWebhook)
+	mux.HandleFunc("PUT /api/sessions/{sid}/webhooks/{id}", s.handleUpdateWebhook)
+	mux.HandleFunc("DELETE /api/sessions/{sid}/webhooks/{id}", s.handleDeleteWebhook)
+	mux.HandleFunc("POST /api/sessions/{sid}/webhooks/{id}/test", s.handleTestWebhook)
+	mux.HandleFunc("POST /api/sessions/{sid}/webhooks/reenable", s.handleReenableWebhook)
+
+	// Chatwoot
+	mux.HandleFunc("GET /api/sessions/{sid}/chatwoot", s.handleGetChatwoot)
+	mux.HandleFunc("POST /api/sessions/{sid}/chatwoot", s.handleSetChatwoot)
+	mux.HandleFunc("DELETE /api/sessions/{sid}/chatwoot", s.handleDeleteChatwoot)
+
+	// MCP Keys & Server
+	mux.HandleFunc("GET /api/sessions/{sid}/mcp-keys", s.handleListMcpKeys)
+	mux.HandleFunc("POST /api/sessions/{sid}/mcp-keys", s.handleCreateMcpKey)
+	mux.HandleFunc("DELETE /api/sessions/{sid}/mcp-keys/{id}", s.handleDeleteMcpKey)
+	mux.HandleFunc("/api/mcp", s.handleMCP)
+	mux.HandleFunc("/mcp", s.handleMCP)
+	mux.HandleFunc("/mcp/{key}", s.handleMCP)
+
+	// SIP Extension
+	mux.HandleFunc("GET /api/sessions/{sid}/sip-ext", s.handleSIPExtConfig)
+	mux.HandleFunc("POST /api/sessions/{sid}/sip-ext", s.handleSIPExtConfig)
+
+	// Native Forms
+	mux.HandleFunc("GET /api/sessions/{sid}/native-forms", s.handleListNativeForms)
+
 	mux.HandleFunc("GET /api/events", s.handleEvents)
 	mux.HandleFunc("GET /api/system/metrics", s.handleSystemMetrics)
 
@@ -73,7 +105,7 @@ func (s *server) routes() http.Handler {
 				// vem de POST /api/auth/login.
 				if r.URL.Path == "/" && s.panel == nil {
 					http.SetCookie(w, &http.Cookie{
-						Name:     "wacalls_admin_token",
+						Name:     "arendcalls_admin_token",
 						Value:    s.adminToken,
 						Path:     "/",
 						HttpOnly: true,
@@ -93,7 +125,7 @@ func (s *server) routes() http.Handler {
 
 func (s *server) withAuth(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/api/auth/") {
+		if !strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/api/auth/") || r.URL.Path == "/api/mcp" {
 			h.ServeHTTP(w, r)
 			return
 		}
@@ -139,8 +171,8 @@ func (s *server) apiKeyOK(r *http.Request) bool {
 func withCORS(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Client-Id, Authorization")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Client-Id, Authorization, X-Api-Key, Mcp-Session-Id, Mcp-Protocol-Version")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return

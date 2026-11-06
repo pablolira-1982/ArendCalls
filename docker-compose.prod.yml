@@ -1,20 +1,20 @@
 version: '3.8'
 
 services:
-  wacalls:
+  arendcalls:
     image: nathanarend/arendcalls:latest
     container_name: arendcalls_server
     restart: unless-stopped
     network_mode: "host"
     environment:
-      - API_KEY=sua_chave_mestra_aqui
-      - WA_PRESENCE_INTERVAL=24h
+      - API_KEY=
+      - WA_PRESENCE_INTERVAL=
       # Chave AES-256-GCM para cifrar credenciais de gravação (se utilizado):
       # - RECORDING_CONFIG_KEY=troque_por_32_bytes_aleatorios_aqui
       # - GOMEMLIMIT=1500MiB
     volumes:
-      - wacalls_data:/app/data
-      - wacalls_recordings:/app/recordings
+      - arendcalls_data:/app/data
+      - arendcalls_recordings:/app/recordings
     expose:
       - "8080"
     ports:
@@ -25,18 +25,18 @@ services:
       labels:
         - traefik.enable=true
         - traefik.docker.network=network_public
-        - traefik.http.routers.wacalls.rule=Host(`call.seudominio.com`)
-        - traefik.http.routers.wacalls.entrypoints=websecure
-        - traefik.http.routers.wacalls.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.wacalls.middlewares=wacalls-auth
-        - traefik.http.middlewares.wacalls-auth.basicauth.users=admin:$$apr1$$exemplo$$hash_gerado_aqui
-        - traefik.http.services.wacalls.loadbalancer.server.port=8080
-        - traefik.http.services.wacalls.loadbalancer.passHostHeader=true
+        - traefik.http.routers.arendcalls.rule=Host(`call.seudominio.com`)
+        - traefik.http.routers.arendcalls.entrypoints=websecure
+        - traefik.http.routers.arendcalls.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.arendcalls.middlewares=arendcalls-auth
+        - traefik.http.middlewares.arendcalls-auth.basicauth.users=admin:$$apr1$$exemplo$$hash_gerado_aqui
+        - traefik.http.services.arendcalls.loadbalancer.server.port=8080
+        - traefik.http.services.arendcalls.loadbalancer.passHostHeader=true
 
 volumes:
-  wacalls_data:
+  arendcalls_data:
     driver: local
-  wacalls_recordings:
+  arendcalls_recordings:
     driver: local
 
 networks:

@@ -3,7 +3,7 @@
 # 📞 ArendCalls
 
 **Chamadas de voz nativas do WhatsApp em puro Go e React 19, direto do seu navegador.**
-*Fork corporativo de alta performance baseado no [WaCalls](https://github.com/jotadev66/wacalls)*
+*Fork corporativo de alta performance baseado no ArendCalls*
 
 [![Docker](https://img.shields.io/badge/DockerHub-nathanarend%2Farendcalls-blue?logo=docker&logoColor=white)](https://hub.docker.com/r/nathanarend/arendcalls)
 [![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev)
@@ -12,7 +12,7 @@
 [![pion](https://img.shields.io/badge/pion-WebRTC-FF6B6B)](https://github.com/pion/webrtc)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-green.svg)](#licenca)
 
-[Diferenciais](#diferenciais) · [Início Rápido (Docker)](#inicio-rapido) · [Windows + Cloudflare Tunnel](#cloudflare-tunnel) · [Como Funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Rotas da API](#endpoints) · [Gravação](#gravacao) · [Migração](#migracao) · [Autenticação](#seguranca)
+[Diferenciais](#diferenciais) · [Novos Módulos](#novos-modulos) · [Início Rápido (Docker)](#inicio-rapido) · [Build & Upgrade Docker Hub](#build-docker) · [Windows + Cloudflare Tunnel](#cloudflare-tunnel) · [Como Funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Rotas da API](#endpoints) · [Gravação](#gravacao) · [Migração](#migracao) · [Autenticação](#seguranca)
 
 </div>
 
@@ -66,10 +66,141 @@ Este repositório (`ArendCalls`) traz diversas melhorias de engenharia e usabili
 | 🔄 **Máquina de Estados Precisa** | Status claros e confiáveis: *Ligando...* (`starting`) ➔ *Chamando...* (`ringing` ao tocar) ➔ *Em chamada* (`active`). |
 | ☁️ **Windows + Cloudflare Tunnel** | Painel acessível pela internet a partir de um Windows comum, sem abrir portas nem configurar roteador: `cloudflared` como serviço + áudio por WebSocket. |
 | 🐳 **Pronto para Produção (Docker)** | Imagem oficial e leve no DockerHub (`nathanarend/arendcalls:latest`), binário estático sem CGO, com suporte nativo a Traefik. |
+| 🛡️ **Proxy por Instância** | Configuração individual de proxy SOCKS5, HTTP ou HTTPS por sessão para isolamento seguro de rede WhatsApp. |
+| ☎️ **Integração SIP / Ramal PBX** | Conexão como ramal SIP com Asterisk, FreePBX, Issabel, OpenSIPS ou Kamailio, permitindo discagem e recebimento via PABX. |
+| 🔔 **Multi-Webhooks Avançados** | Registro de até 10 webhooks simultâneos com assinatura secreta HMAC, seleção granular de eventos e disparo de teste. |
+| 🤖 **MCP (Model Context Protocol)** | Integração direta com agentes inteligentes (LangChain, Flowise, Claude Desktop, OpenAI Assistants) via chaves MCP dedicadas. |
+| 💬 **Sincronização com Chatwoot** | Registro de contatos, mensagens e eventos de chamadas diretamente na caixa de entrada do seu Chatwoot. |
+| 📋 **Formulários Interativos** | Gestão e consulta de fluxos e telas de formulários nativos do WhatsApp (WhatsApp Flows). |
 
 ---
 
-<a id="inicio-rapido"></a>
+<a id="novos-modulos"></a>
+## 🧩 Novos Módulos Integrados
+
+O ArendCalls conta com seis novos módulos integrados nativamente tanto no painel visual quanto na API:
+
+### 1. 🛡️ Proxy por Sessão
+Permite rotear o tráfego de conexões específicas de WhatsApp por proxies dedicados (**SOCKS5**, **HTTP** ou **HTTPS**), ideal para evitar bloqueios de IP de datacenter e isolar instâncias.
+- **Painel:** Botão **Proxy** no cabeçalho da sessão selecionada.
+- **Endpoints:**
+  - `GET /api/sessions/{sid}/proxy`
+  - `PUT /api/sessions/{sid}/proxy` com `{ "proxy": "socks5://user:pass@host:1080" }`
+
+### 2. ☎️ Ramal SIP / PABX
+Permite que o ArendCalls atue como um ramal SIP tradicional registrado em seu servidor **Asterisk**, **FreePBX**, **Issabel**, **Kamailio** ou PABX em nuvem.
+- **Configuração:** Host, Porta (padrão 5060), Usuário, Senha e Roteamento Inbound.
+- **Painel:** Botão **SIP** no cabeçalho da sessão.
+- **Endpoints:**
+  - `GET /api/sessions/{sid}/sip-ext`
+  - `POST /api/sessions/{sid}/sip-ext`
+
+### 3. 🔔 Multi-Webhooks com HMAC
+Permite cadastrar até 10 webhooks independentes por instância com assinatura criptográfica `X-Hub-Signature-256`, seleção de eventos desejados (`call.incoming`, `call.accepted`, `call.ended`, etc.) e botão de teste em tempo real.
+- **Painel:** Botão **Webhooks** no cabeçalho da sessão.
+- **Endpoints:**
+  - `GET /api/sessions/{sid}/webhooks`
+  - `POST /api/sessions/{sid}/webhooks`
+  - `PUT /api/sessions/{sid}/webhooks/{id}`
+  - `DELETE /api/sessions/{sid}/webhooks/{id}`
+  - `POST /api/sessions/{sid}/webhooks/{id}/test`
+
+### 4. 🤖 MCP (Model Context Protocol) para Agentes de IA
+Gera chaves de acesso com permissão de leitura ou controle total para que agentes de inteligência artificial (LangChain, Flowise, Claude Desktop, AutoGen, etc.) possam interagir com chamadas via WhatsApp pelo protocolo padrão MCP.
+- **Painel:** Botão **MCP** no cabeçalho da sessão.
+- **Endpoints:**
+  - `GET /api/sessions/{sid}/mcp-keys`
+  - `POST /api/sessions/{sid}/mcp-keys`
+  - `DELETE /api/sessions/{sid}/mcp-keys/{id}`
+
+### 5. 💬 Sincronização com Chatwoot
+Conecta a instância diretamente a uma caixa de entrada (inbox) do Chatwoot com suporte a importação de histórico e espelhamento de eventos.
+- **Painel:** Botão **Chatwoot** no cabeçalho da sessão.
+- **Endpoints:**
+  - `GET /api/sessions/{sid}/chatwoot`
+  - `POST /api/sessions/{sid}/chatwoot`
+  - `DELETE /api/sessions/{sid}/chatwoot`
+
+### 6. 📋 Formulários Nativos do WhatsApp
+Gerencia formulários e fluxos nativos do WhatsApp (WhatsApp Flows), exibindo contagem de envios e respostas dos clientes.
+- **Painel:** Botão **Formulários** no cabeçalho da sessão.
+- **Endpoints:**
+  - `GET /api/sessions/{sid}/native-forms`
+
+---
+
+<a id="build-docker"></a>
+## 📦 Guia para o Proprietário: Como Criar e Publicar uma Nova Versão no Docker Hub (`hub.docker.com`)
+
+Como a distribuição oficial do **ArendCalls** é consumida diretamente do [Docker Hub (`nathanarend/arendcalls`)](https://hub.docker.com/r/nathanarend/arendcalls), existem **duas formas** para o proprietário do repositório gerar e publicar uma nova versão (`:latest` e `:vX.Y.Z`):
+
+---
+
+### Opção A — Automática pelo GitHub Actions (Recomendado)
+
+O workflow [`.github/workflows/docker.yml`](.github/workflows/docker.yml) já está pronto para compilar a imagem em **multi-arquitetura (`linux/amd64` + `linux/arm64`)** e publicar automaticamente no **Docker Hub** e no **GHCR** a cada nova tag `v*`.
+
+1. **Gerar um Token de Acesso no Docker Hub:**
+   - Acesse [https://hub.docker.com/settings/security](https://hub.docker.com/settings/security)
+   - Clique em **New Access Token**, dê o nome `github-actions-arendcalls` com permissão **Read, Write, Delete** e copie o token gerado.
+2. **Cadastrar os Secrets no Repositório GitHub:**
+   - No GitHub do projeto, vá em **Settings → Secrets and variables → Actions → New repository secret** e crie:
+     - `DOCKERHUB_USERNAME`: `nathanarend` (ou seu usuário do Docker Hub)
+     - `DOCKERHUB_TOKEN`: *(cole o Access Token gerado no passo 1)*
+3. **Publicar uma Nova Versão:**
+   - Basta criar e enviar uma tag de versão pelo Git:
+     ```bash
+     git tag v2.0.0
+     git push origin v2.0.0
+     ```
+   - Ou acessar a aba **Actions → Docker Hub & GHCR Release → Run workflow** no GitHub, informar a tag (ex: `v2.0.0`) e clicar em **Run workflow**.
+
+---
+
+### Opção B — Manual via Terminal (Docker CLI / Buildx)
+
+Caso prefira gerar e enviar a imagem diretamente da sua máquina para o `hub.docker.com`:
+
+#### 1. Autenticar no Docker Hub
+```bash
+docker login -u nathanarend
+```
+
+#### 2. Build e Push Multi-Arquitetura (`linux/amd64` + `linux/arm64`)
+Suporta tanto servidores VPS tradicionais (`x86_64`/`amd64`) quanto servidores ARM (`arm64` como Oracle Cloud Ampere, AWS Graviton e Apple Silicon):
+```bash
+# Criar e ativar o builder multi-arch (necessário apenas na primeira vez)
+docker buildx create --name arendbuilder --use 2>/dev/null || docker buildx use arendbuilder
+docker buildx inspect --bootstrap
+
+# Compilar o Dockerfile (Frontend React + Backend Go estático) e publicar no Docker Hub
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t nathanarend/arendcalls:latest \
+  -t nathanarend/arendcalls:v2.0.0 \
+  --push .
+```
+
+#### 3. Build e Push Simples (Apenas `linux/amd64`)
+```bash
+# 1. Compilar a imagem com a tag da versão e :latest
+docker build -t nathanarend/arendcalls:v2.0.0 -t nathanarend/arendcalls:latest .
+
+# 2. Enviar para o hub.docker.com
+docker push nathanarend/arendcalls:v2.0.0
+docker push nathanarend/arendcalls:latest
+```
+
+---
+
+### 4. Como Atualizar nos Servidores após Publicar no Docker Hub
+Assim que a imagem estiver publicada no Docker Hub, qualquer servidor ou stack Portainer/Docker Compose atualiza com:
+```bash
+docker compose pull
+docker compose up -d
+```
+
+---
 ## 🐳 Início Rápido com Docker (Recomendado)
 
 A maneira mais prática e recomendada para rodar em servidores e VPS:
@@ -88,7 +219,7 @@ services:
     environment:
       - API_KEY=sua_chave_mestra_secreta_aqui
       # Só se for usar gravação de chamada — chave AES-256-GCM (32+ bytes aleatórios)
-      # para cifrar as credenciais do B2/webhook no wacalls.db:
+      # para cifrar as credenciais do B2/webhook no arendcalls.db:
       - RECORDING_CONFIG_KEY=troque_por_32_bytes_aleatorios_aqui
       # Recomendado em produção: ~75% do limite de memória do container
       # - GOMEMLIMIT=1500MiB
@@ -155,7 +286,7 @@ go run ./cmd/server -addr :8080 -static client/dist
 | Parâmetro | Padrão | Descrição |
 |---|---|---|
 | `-addr` | `:8080` | Endereço e porta de escuta HTTP |
-| `-db` | `wacalls.db` | Caminho do arquivo de banco SQLite das instâncias |
+| `-db` | `arendcalls.db` | Caminho do arquivo de banco SQLite das instâncias |
 | `-static` | `client/dist` | Pasta com os arquivos estáticos do frontend compilado (sem a flag, procura `client/dist` ao lado do executável e depois no diretório atual) |
 | `-debug` | `false` | Habilita logs detalhados do WhatsApp e WebRTC |
 | `-max-calls` | `0` | Limite de chamadas simultâneas por conta (`0` = sem limite) |
@@ -171,7 +302,7 @@ go run ./cmd/server -addr :8080 -static client/dist
 `WA_PRESENCE_INTERVAL_HOURS` (alternativa numérica para intervalo em horas),
 `WA_VERSION_CHECK_HOUR` (hora local, 0–23, da checagem diária da versão do cliente WhatsApp; se mudou, reconecta as contas abertas sem ligação ativa; padrão: `3`),
 `RECORDING_CONFIG_KEY` (AES-256-GCM para cifrar credenciais de gravação no
-`wacalls.db` — sem ela, segredos em texto puro + warning), `GOGC` (padrão `200` na
+`arendcalls.db` — sem ela, segredos em texto puro + warning), `GOGC` (padrão `200` na
 imagem Docker), `GOMEMLIMIT` (recomendado em produção, ~75% da RAM do container),
 `AUDIO_PREBUFFER_MS_WEBRTC` / `AUDIO_PREBUFFER_MS_WEBSOCKET` (pré-buffer da reprodução
 por transporte, 0–500 ms, padrões `0` e `60` — ver [Pré-buffer](#prebuffer)).
@@ -195,7 +326,7 @@ Cada release traz um pacote com o binário, o painel já compilado, o script
    `.env` para `:8080` para abrir na rede).
 
 O `.env` usa `CHAVE=valor`, sem aspas. Ele não vem no pacote: para atualizar, extraia a
-versão nova por cima da pasta atual e o `.env`, o `wacalls.db` e as gravações ficam como
+versão nova por cima da pasta atual e o `.env`, o `arendcalls.db` e as gravações ficam como
 estão. No Windows, `CLOUDFLARE_QUICK_TUNNEL=1` no `.env` abre um quick tunnel
 (`trycloudflare.com`) junto; para endereço fixo, veja o [Cloudflare Tunnel](#cloudflare-tunnel).
 
@@ -204,15 +335,15 @@ estão. No Windows, `CLOUDFLARE_QUICK_TUNNEL=1` no `.env` abre um quick tunnel
 O mesmo código compila para Windows, sem Docker nem WSL.
 
 1. Baixe na [página de Releases](https://github.com/nathanarend/ArendCalls/releases) o
-   `wacalls-server-windows-amd64.exe` (renomeie para `arendcalls.exe`) e o
-   `wacalls-client-<versão>.tar.gz`, ou compile a partir do código:
+   `arendcalls-server-windows-amd64.exe` (renomeie para `arendcalls.exe`) e o
+   `arendcalls-client-<versão>.tar.gz`, ou compile a partir do código:
    ```bash
    GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o arendcalls.exe ./cmd/server
    ```
 2. Monte a pasta `C:\arendcalls` com o binário e o frontend (o `tar` já vem no Windows Server 2019+):
    ```powershell
    mkdir C:\arendcalls\client\dist
-   tar -xzf wacalls-client-<versão>.tar.gz -C C:\arendcalls\client\dist
+   tar -xzf arendcalls-client-<versão>.tar.gz -C C:\arendcalls\client\dist
    ```
 3. Libere o firewall (PowerShell como administrador). A faixa UDP é a mídia WebRTC das chamadas:
    ```powershell
@@ -222,7 +353,7 @@ O mesmo código compila para Windows, sem Docker nem WSL.
 4. Instale como serviço com o [NSSM](https://nssm.cc/). O NSSM envia Ctrl+C ao parar o
    serviço, então o servidor encerra as chamadas e o banco de forma limpa:
    ```powershell
-   nssm install ArendCalls C:\arendcalls\arendcalls.exe -addr :8080 -static C:\arendcalls\client\dist -db C:\arendcalls\wacalls.db -recordings-dir C:\arendcalls\recordings
+   nssm install ArendCalls C:\arendcalls\arendcalls.exe -addr :8080 -static C:\arendcalls\client\dist -db C:\arendcalls\arendcalls.db -recordings-dir C:\arendcalls\recordings
    nssm set ArendCalls AppDirectory C:\arendcalls
    nssm set ArendCalls AppEnvironmentExtra API_KEY=sua_chave_mestra GOGC=200
    nssm start ArendCalls
@@ -382,6 +513,46 @@ Todas as rotas de API exigem autenticação (ver [Segurança](#seguranca)).
 | `GET` | `/api/sessions/{sid}/recordings` | Monitoramento: estado por gravação, contagem por status, uso de disco local |
 | `GET` | `/api/sessions/{sid}/calls/{id}/recording-info` | Reconciliação: mesmo payload do webhook, para recuperar notificações perdidas |
 
+### Proxy & Rede
+
+| Método | Rota | Finalidade |
+|---|---|---|
+| `GET` | `/api/sessions/{sid}/proxy` | Obter proxy configurado na instância |
+| `PUT` | `/api/sessions/{sid}/proxy` | Salvar proxy (SOCKS5, HTTP ou HTTPS) e reconectar |
+
+### Multi-Webhooks
+
+| Método | Rota | Finalidade |
+|---|---|---|
+| `GET` | `/api/sessions/{sid}/webhooks` | Listar webhooks cadastrados para a sessão |
+| `POST` | `/api/sessions/{sid}/webhooks` | Criar novo webhook com URL, secret HMAC e eventos |
+| `PUT` | `/api/sessions/{sid}/webhooks/{id}` | Atualizar configuração de um webhook existente |
+| `DELETE` | `/api/sessions/{sid}/webhooks/{id}` | Remover um webhook da sessão |
+| `POST` | `/api/sessions/{sid}/webhooks/{id}/test` | Disparar envio de payload de teste |
+| `POST` | `/api/sessions/{sid}/webhooks/reenable` | Reativar circuito de disparo |
+
+### Agentes MCP (Model Context Protocol)
+
+| Método | Rota | Finalidade |
+|---|---|---|
+| `GET` | `/api/sessions/{sid}/mcp-keys` | Listar chaves MCP geradas |
+| `POST` | `/api/sessions/{sid}/mcp-keys` | Gerar nova chave de autenticação MCP para agentes IA |
+| `DELETE` | `/api/sessions/{sid}/mcp-keys/{id}` | Revogar chave MCP |
+
+### Ramal SIP / PABX
+
+| Método | Rota | Finalidade |
+|---|---|---|
+| `GET` | `/api/sessions/{sid}/sip-ext` | Obter credenciais e status do ramal SIP |
+| `POST` | `/api/sessions/{sid}/sip-ext` | Salvar configuração do ramal SIP (Host, Porta, Usuário, Senha, Roteamento) |
+
+### Chatwoot & Formulários
+
+| Método | Rota | Finalidade |
+|---|---|---|
+| `GET` · `POST` · `DELETE` | `/api/sessions/{sid}/chatwoot` | Gerenciar integração com caixa de entrada Chatwoot |
+| `GET` | `/api/sessions/{sid}/native-forms` | Listar formulários e telas nativas do WhatsApp Flows |
+
 ### Painel / Sistema / Eventos
 
 | Método | Rota | Finalidade |
@@ -466,7 +637,7 @@ Retry com backoff (1 min / 5 min / 15 min / 1 h) persistido e retomado no boot;
 
 > **`RECORDING_CONFIG_KEY`** — defina esta env var (32+ bytes aleatórios) para que
 > as credenciais do B2 e o segredo do webhook sejam cifrados (AES-256-GCM) no
-> `wacalls.db`. Sem ela, os segredos ficam em **texto puro** e o servidor loga um
+> `arendcalls.db`. Sem ela, os segredos ficam em **texto puro** e o servidor loga um
 > aviso no boot.
 
 ---
@@ -610,7 +781,7 @@ curl -X GET "https://call.seudominio.com/api/sessions" \
 curl -s -u usuario:senha "https://call.seudominio.com/api/sessions?apikey=sua_chave_mestra_aqui"
 ```
 
-> **Aviso de Segurança:** O arquivo `wacalls.db` guarda os tokens e credenciais de sessão do WhatsApp, e as credenciais do B2/webhook de gravação (cifradas se `RECORDING_CONFIG_KEY` estiver definida). **Nunca commite este arquivo** em repositórios públicos e mantenha seus backups protegidos.
+> **Aviso de Segurança:** O arquivo `arendcalls.db` guarda os tokens e credenciais de sessão do WhatsApp, e as credenciais do B2/webhook de gravação (cifradas se `RECORDING_CONFIG_KEY` estiver definida). **Nunca commite este arquivo** em repositórios públicos e mantenha seus backups protegidos.
 
 > **pprof:** a flag `-pprof` fica desligada por padrão. Se ligar, aponte apenas para
 > `127.0.0.1` — a porta expõe profiling e não deve ficar acessível publicamente.
@@ -620,7 +791,7 @@ curl -s -u usuario:senha "https://call.seudominio.com/api/sessions?apikey=sua_ch
 <a id="creditos"></a>
 ## 👥 Créditos e Agradecimentos
 
-O **ArendCalls** é desenvolvido como um fork aprimorado do projeto de código aberto [WaCalls](https://github.com/jotadev66/wacalls), criado por:
+O **ArendCalls** é desenvolvido como um fork aprimorado do projeto de código aberto ArendCalls, criado por:
 
 <div align="center">
 

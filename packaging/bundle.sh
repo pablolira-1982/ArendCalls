@@ -16,10 +16,10 @@ for target in windows-amd64 linux-amd64 linux-arm64; do
     name="arendcalls-${tag}-${target}"
     dir="$work/$name"
     mkdir -p "$dir/client/dist"
-    tar -xzf "$art/wacalls-client-${tag}.tar.gz" -C "$dir/client/dist"
+    tar -xzf "$art/arendcalls-client-${tag}.tar.gz" -C "$dir/client/dist"
     case $target in
     windows-*)
-        cp "$art/wacalls-server-${target}.exe" "$dir/arendcalls.exe"
+        cp "$art/arendcalls-server-${target}.exe" "$dir/arendcalls.exe"
         # cmd.exe precisa de CRLF.
         sed 's/$/\r/' "$pkg/windows/iniciar.bat" > "$dir/iniciar.bat"
         sed 's/$/\r/' "$pkg/env.example" > "$dir/.env.example"
@@ -27,7 +27,7 @@ for target in windows-amd64 linux-amd64 linux-arm64; do
         (cd "$work" && zip -qr "$out/$name.zip" "$name")
         ;;
     *)
-        install -m 755 "$art/wacalls-server-${target}" "$dir/arendcalls"
+        install -m 755 "$art/arendcalls-server-${target}" "$dir/arendcalls"
         install -m 755 "$pkg/linux/iniciar.sh" "$dir/iniciar.sh"
         cp "$pkg/env.example" "$dir/.env.example"
         tar -czf "$out/$name.tar.gz" -C "$work" "$name"

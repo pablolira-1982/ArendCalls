@@ -21,4 +21,4 @@ CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$BIN" ./cmd/server
 #    no hot path de áudio (o default 100 custa CPU mensurável sob carga de call
 #    e causa engasgo no áudio recebido). Igual ao ENV do Dockerfile.
 echo "==> iniciando o servidor ArendCalls em :8080"
-exec env GOGC=200 "./$BIN" -static client/dist -addr :8080 -db wacalls.db "$@"
+exec env GOGC=200 "./$BIN" -static client/dist -addr :8080 -db arendcalls.db "$@"
